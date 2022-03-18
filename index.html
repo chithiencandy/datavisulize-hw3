@@ -1,0 +1,242 @@
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+  
+    <!-- Optional theme -->
+	  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.14/dist/css/bootstrap-select.min.css">
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/6.0.0-beta2/css/tempus-dominus.min.css">
+
+
+
+
+    
+  
+	
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.10.6/moment.min.js"></script>   
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.37/js/bootstrap-datetimepicker.min.js"></script>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.13.1/js/bootstrap-select.min.js"></script>
+
+
+
+
+<div class="container-fluid" >
+ <div class="row center" style="text-align: center;color:blue"> 
+ <h3>Homework3  -  MSSV: 20c12018  -  Họ tên: Nguyễn Chí Thiện</h3>
+ </div>
+    <div class="row">
+ 	<!-----   controll   --->
+		
+			<div class='col-md-4'>
+			 <div class="form-group">
+			
+				<select title="Choose some person" id="personsCbx" class="selectpicker form-control multiple" style="width:auto;"  data-live-search="true" multiple >
+				
+				</select>
+				   </div>
+			</div>
+	
+		<!-----   controll   --->
+			<div class='col-md-3'>
+        <div class="form-group">
+            <div class='input-group date datetimepicker' id='datetimepicker1'>
+               <input type='text' class="form-control" />
+               <span class="input-group-addon">
+               <span class="glyphicon glyphicon-calendar"></span>
+               </span>
+            </div>
+         </div>
+        </div>	
+		<!-----   controll   --->
+			<div class='col-md-3'>
+		<div class="form-group">
+            <div class='input-group date datetimepicker' id='datetimepicker2'>
+               <input type='text' class="form-control" />
+               <span class="input-group-addon">
+               <span class="glyphicon glyphicon-calendar"></span>
+               </span>
+            </div>
+         </div>
+        </div>	
+		<div class='col-md-2'>
+		<div class="btn btn-primary" id="filter">Filter</div>	
+		    </div>
+	
+</div>
+	<div width="100%">
+		<canvas id="myChart"></canvas>
+	</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://d3js.org/d3.v7.min.js"></script>
+
+
+ <script>
+ $(document).ready(function(){
+ var isReload = false;
+ var myChart = {};
+  $(function () {
+            $('.datetimepicker').datetimepicker({	
+                format: 'YYYY-MM',			
+				minDate: new Date('2010-01'),
+				maxDate: new Date('2020-12'),
+			});
+		    $('#datetimepicker1').data("DateTimePicker").date(new Date('2010-01'));
+			$('#datetimepicker2').data("DateTimePicker").date(new Date('2020-07'));
+			$('#personsCbx').selectpicker();
+  });
+  var filter_persons = [];
+  $('#filter').click(function() {
+         isReload = true;
+        filter_persons = $('#personsCbx').val();
+		var grapharea = document.getElementById("myChart").getContext("2d");
+		myChart.destroy();
+		
+        d3.csv('https://apitest.vnptigate.vn/fi/wopi/files/62340db95938ff48c51d3e26/contents')
+		.then(makeChart);
+  });
+  
+ 
+ 
+ d3.csv('https://apitest.vnptigate.vn/fi/wopi/files/62340db95938ff48c51d3e26/contents')
+  .then(makeChart);
+  
+function getRandomColor() {
+  var letters = '0123456789ABCDEF';
+  var color = '#';
+  for (var i = 0; i < 6; i++) {
+    color += letters[Math.floor(Math.random() * 16)];
+  }
+  return color;
+}
+
+function makeChart(singers) {
+
+    if(filter_persons != null && filter_persons.length > 0 ){
+      singers = singers.filter(function( index ) {
+      return ($.inArray(index.person, filter_persons) !== -1 
+	   
+	  );
+    });
+	}
+	
+	singers = singers.filter(function( index ) {
+      return (index.year_month >= $('#datetimepicker1').find("input").val()
+		      && index.year_month <= $('#datetimepicker2').find("input").val()
+	  );
+    });
+	
+
+	
+	
+	
+	var years = singers.map(function(d) {return d.year_month});
+	var singersCbx = singers.map(function(d) {return d.person});
+	years  = [...new Set(years)];
+	
+	
+	
+	singersCbx = [...new Set(singersCbx)];
+    
+	if(isReload != true){
+	singersCbx.forEach( function(row){
+	    
+		$('#personsCbx').append('<option value="'+row+'">'+row+'</option>');
+	});
+	$('#personsCbx').selectpicker('refresh');
+    }
+	
+   
+	var filter = ['adam schiff','al sharpton'];
+  
+   
+	
+	singers.sort(function(a, b) {
+	
+		const nameA = a.person.toUpperCase(); // ignore upper and lowercase
+		const nameB = b.person.toUpperCase(); // ignore upper and lowercase
+		if (nameA < nameB) {
+			return -1;
+		}
+		
+	});
+	
+	
+	var datasets = [];
+	var dataset = {
+	  label:'',
+	  data: []
+	};
+	
+   singers.forEach( function(row){
+    
+   
+	if(dataset.label !== row.person){
+	  
+	  
+	  if(dataset.data.length > 0) datasets.push(dataset);
+	  var color = getRandomColor();
+	  dataset = {
+		label: row.person,
+		backgroundColor: color,
+		borderColor: color,
+		data: [],
+	  }
+	  
+	}
+	dataset.data.push(row.screen_time_seconds);
+   
+   
+   });
+   datasets.push(dataset);
+	
+   //var singer1 = singers.filter(word => word.person == "adam schiff");
+   //var data1 = singer1.map(function(d) {return d.screen_time_seconds}); 
+   //var year2 = singer1.map(function(d) {return d.year_month});
+   
+ 
+ //  var singer2 = singers.filter(word => word.person == "al sharpton");
+  // var data2 = singer2.map(function(d) {return d.screen_time_seconds});
+
+ 
+ const data = {
+    labels: years,
+    datasets: datasets
+  };
+	
+   const config = {
+    type: 'line',
+    data: data,
+    options: {
+	 title: {
+        display: true,
+        text: ['Chart.js','Line Chart']
+    },
+	elements:{
+		line:{
+		borderWidth: 1,
+		borderCapStyle: 'round'
+		},
+		point:{
+                        radius: 0
+                    }
+	},
+	plugins:{legend:{
+	position:'right'
+	}}
+	},
+	 plugins: []
+	 
+  };
+	
+	     myChart = new Chart(
+		document.getElementById('myChart'),
+		config
+	  );
+	}
+
+});
+</script>
