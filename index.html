@@ -114,6 +114,9 @@ function getRandomColor() {
 }
 
 function makeChart(singers) {
+	if($('#datetimepicker1').find("input").val() > $('#datetimepicker2').find("input").val()){
+	 alert('Invalid Month year!')
+	}
 
     if(filter_persons != null && filter_persons.length > 0 ){
       singers = singers.filter(function( index ) {
